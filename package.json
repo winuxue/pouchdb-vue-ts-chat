@@ -1,0 +1,31 @@
+{
+  "name": "hz-chat-vue-sfc",
+  "version": "1.0.0",
+  "description": "test vue-sfc + typescript + webpack + horizon + rethinkdb",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "test": "http-serve dist/",
+    "all": "npm run build && npm run test"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "http-serve": "^1.0.1",
+    "pouchdb-browser": "^6.4.3",
+    "vue": "^2.4.2",
+    "vuex": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/pouchdb": "^6.3.2",
+    "css-loader": "^0.28.4",
+    "ts-loader": "^2.3.2",
+    "typescript": "^2.7.2",
+    "vue-loader": "^13.0.2",
+    "vue-property-decorator": "^5.3.0",
+    "vue-template-compiler": "^2.4.2",
+    "vue-typescript-import-dts": "^3.1.1",
+    "vuex-class": "^0.2.0",
+    "webpack": "^3.4.1"
+  }
+}

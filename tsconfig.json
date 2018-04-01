@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": ["dom", "es2015"],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "strictNullChecks": true,
+    "strictPropertyInitialization": false,
+    "experimentalDecorators": true,
+    "noImplicitAny": false,
+    "noImplicitThis": false,
+    "noImplicitReturns": true,
+    "removeComments": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "strictFunctionTypes": false,
+    "types": ["vue-typescript-import-dts"]
+  }
+}

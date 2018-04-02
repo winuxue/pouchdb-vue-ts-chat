@@ -7,23 +7,20 @@ Vue.use(Vuex);
 import PouchDB from "pouchdb-browser";
 const chat = new PouchDB("chat");
 
-const store = new Vuex.Store({
+const chatStore = new Vuex.Store({
   state: {
     messages: [],
     avatar_url: ""
   },
   mutations: {
-    storeMessage(state: any, msg: Message) {
-      //chat.post(msg).then(
-      chat.put(msg).then(
-        function(msg: any) {
-          console.log("Successfully posted a message!");
-        },
-        function(err: any) {
-          console.log("post err:");
-          console.dir(err);
-        }
-      );
+    async storeMessage(state: any, msg: Message) {
+      try {
+        //chat.post(msg).then(
+        let response = await chat.put(msg);
+      } catch (err) {
+        console.log("post err:");
+        console.dir(err);
+      }
     },
     setMessages(state: any, msgs: Message[]) {
       state.messages = msgs;
@@ -34,28 +31,28 @@ const store = new Vuex.Store({
   }
 });
 
-function getMessages() {
-  chat.allDocs({ include_docs: true, descending: true }).then(
-    function(msgs: any) {
-      console.log(msgs);
-      store.commit("setMessages", msgs.rows);
-    },
-    function(err: any) {
-      console.log("alldocs err:");
-      console.dir(err);
-    }
-  );
+async function getMessages() {
+  try {
+    let msgs = await chat.allDocs({
+      include_docs: true,
+      descending: true,
+      limit: 10
+    });
+    chatStore.commit("setMessages", msgs.rows);
+  } catch (err) {
+    console.log("alldocs err:");
+    console.dir(err);
+  }
 }
 
 chat
-  .changes({
-    since: "now",
-    live: true
-  })
-  .on("change", function() {
-    console.log("change event fired");
-    getMessages();
+  .changes({ since: "now", live: true, include_docs: true })
+  .on("change", function(change) {
+    chatStore.state.messages.unshift({
+      id: change.doc!._id,
+      doc: change.doc
+    });
   });
 
 getMessages();
-export default store;
+export default chatStore;

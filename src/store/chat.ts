@@ -4,7 +4,7 @@ import { Message } from "../state/message";
 
 Vue.use(Vuex);
 
-import PouchDB from "pouchdb-browser";
+import PouchDB from "pouchdb";
 const chat = new PouchDB("chat");
 
 const chatStore = new Vuex.Store({

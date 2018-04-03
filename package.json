@@ -5,14 +5,17 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack",
-    "test": "http-serve dist/",
-    "all": "npm run build && npm run test"
+    "serve": "http-serve dist/",
+    "test": "npm run build && npm run serve",
+    "pouchdb": "pouchdb-server --port 5984",
+    "all": "npm run pouchdb & npm run test & wait"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "http-serve": "^1.0.1",
-    "pouchdb": "^6.4.3",
+    "pouchdb-browser": "^6.4.3",
+    "pouchdb-server": "^4.0.0",
     "vue": "^2.4.2",
     "vuex": "^2.3.1"
   },

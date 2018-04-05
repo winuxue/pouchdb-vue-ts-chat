@@ -5,7 +5,10 @@ import { Message } from "../state/message";
 Vue.use(Vuex);
 
 import PouchDB from "pouchdb-browser";
-const chat = new PouchDB("'http://localhost:5984/chat");
+var remote: PouchDB.Database<{}> = new PouchDB<Message>(
+  "http://localhost:5984/chat"
+);
+var local: PouchDB.Database<{}> = new PouchDB<Message>("chat");
 
 const chatStore = new Vuex.Store({
   state: {
@@ -16,9 +19,8 @@ const chatStore = new Vuex.Store({
     async storeMessage(state: any, msg: Message) {
       try {
         //chat.post(msg)
-        let response = await chat.put(msg);
+        let response = await local.put(msg);
       } catch (err) {
-        alert("Message was not sent");
         console.log("post err:");
         console.dir(err);
       }
@@ -34,74 +36,135 @@ const chatStore = new Vuex.Store({
 
 async function getMessages() {
   try {
-    let msgs = await chat.allDocs({
+    let msgs = await local.allDocs({
       include_docs: true,
       descending: true,
       limit: 10
     });
     chatStore.commit("setMessages", msgs.rows);
   } catch (err) {
-    last_seq = Number(last_seq) - 1;
     console.log("alldocs err:");
     console.dir(err);
   }
 }
 
-var last_seq: string | number;
-let changes: PouchDB.Core.Changes<Message>;
-async function feedChanges() {
-  try {
-    changes = chat.changes<Message>({
-      since: last_seq,
-      live: true
-    });
-    changes.on("change", function(
-      change: PouchDB.Core.ChangesResponseChange<Message>
-    ) {
-      console.log("changes on change:");
-      console.log(change);
+const localChanges = local.changes({
+  since: "now",
+  live: true,
+  include_docs: true
+});
 
-      last_seq = change.seq;
-      getMessages();
-    });
-    changes.on("complete", function(
-      info: PouchDB.Core.ChangesResponse<Message>
-    ) {
-      // changes() was canceled
-      console.log("changes on complete:");
-      console.log(info);
-      console.log("changes:");
-      console.log(changes);
-    });
-    changes.on("error", function(err) {
-      console.log("changes on error:");
-      console.log(err);
-      console.log("changes:");
-      console.log(changes);
+localChanges.on("change", function(change) {
+  console.log("local changes on change");
+  console.log(change);
 
-      //needed because changes doesn't have retry option
-      changes.cancel();
-      setTimeout(feedChanges, 5 * 1000);
-    });
-  } catch (err) {
-    //needed because changes doesn't have retry option
-    changes.cancel();
-    setTimeout(feedChanges, 5 * 1000);
+  getMessages();
+});
+var sync = PouchDB.sync(local, remote, {
+  live: true,
+  retry: true,
+  push: {
+    filter: function(doc: Message) {
+      return !doc.replicated;
+    }
   }
-}
+});
+sync.on("change", function(info: PouchDB.Replication.SyncResult<Message>) {
+  console.log("replicate on change");
+  console.log(info);
 
-chat
-  .info()
-  .then(function(result) {
-    console.log("PouchDB database info:");
-    console.log(result);
-
-    last_seq = result.update_seq;
-    feedChanges();
-    getMessages();
-  })
-  .catch(function(err) {
-    console.log(err);
+  // if (info.direction == "push") {
+  info.change.docs.forEach(function(message) {
+    message.replicated = true;
+    local.put(message);
   });
+  // }
+});
+sync.on("paused", function(err) {
+  if (err) {
+    console.log("replicate on paused - offline error?");
+    console.log(err);
+  } else {
+    console.log("replicate on paused - up to date");
+  }
+});
+sync.on("active", function() {
+  console.log("replicate on active");
+});
+sync.on("denied", function(err) {
+  console.log("replicate on denied");
+  console.log(err);
+});
+sync.on("complete", function(
+  info: PouchDB.Replication.SyncResultComplete<Message>
+) {
+  console.log("replicate on complete");
+  console.log(info);
+});
+sync.on("error", function(err) {
+  console.log("replicate on error");
+  console.log(err);
+});
 
+PouchDB.on("created", function(dbName) {
+  console.log("PouchDB on created: " + dbName);
+});
+PouchDB.on("destroyed", function(dbName) {
+  console.log("PouchDB on destroyed: " + dbName);
+});
+
+///////////////////////////////////
+
+// changes.on("complete", function(info) {
+//   // changes() was canceled
+//   console.log("changes complete:");
+//   console.info();
+//   console.log("changes:");
+//   console.log(changes);
+// });
+// changes.on("error", function(err) {
+//   console.log("changes error:");
+//   console.log(err);
+//   console.log("changes:");
+//   console.log(changes);
+//   changes.cancel();
+//   setTimeout(liveChanges, 5 * 1000);
+// });
+////////////////////////////////////
+// let changes: PouchDB.Core.Changes<{}>;
+
+// function liveChanges() {
+//   console.log("trying to handle change");
+// changes = local.changes({ since: "now", live: true, include_docs: true });
+
+// changes.on("change", function(change) {
+//   console.log("changes change:");
+//   console.log(change);
+//   console.log("changes:");
+//   console.log(changes);
+
+//   chatStore.state.messages.unshift({
+//     id: change.doc!._id,
+//     doc: change.doc
+//   });
+// });
+// changes.on("complete", function(info) {
+//   // changes() was canceled
+//   console.log("changes complete:");
+//   console.info();
+//   console.log("changes:");
+//   console.log(changes);
+// });
+// changes.on("error", function(err) {
+//   console.log("changes error:");
+//   console.log(err);
+//   console.log("changes:");
+//   console.log(changes);
+//   changes.cancel();
+//   setTimeout(liveChanges, 5 * 1000);
+// });
+// }
+// liveChanges();
+
+getMessages();
 export default chatStore;

@@ -12,6 +12,9 @@
           {{ message.doc.text }}
       </div>
        <div class="column is-narrow datetime is-hidden-mobile">
+          {{ message.doc.replicated ? '(Remote)' : '(Local)'  }}
+      </div> 
+      <div class="column is-narrow datetime is-hidden-mobile">
           {{message.doc._id}}
       </div> 
     </div>

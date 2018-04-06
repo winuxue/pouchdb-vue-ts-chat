@@ -1,14 +1,14 @@
 {
-  "name": "hz-chat-vue-sfc",
+  "name": "pouchdb-vue-ts-chat",
   "version": "1.0.0",
-  "description": "test vue-sfc + typescript + webpack + horizon + rethinkdb",
-  "main": "index.js",
+  "description": "A realtime chat built using Vue + Typescript and Pouchdb",
   "scripts": {
     "build": "webpack",
     "serve": "http-serve dist/",
-    "test": "npm run build && npm run serve",
     "pouchdb": "pouchdb-server --port 5984",
-    "all": "npm run pouchdb & npm run test & wait"
+    "test": "npm run pouchdb & npm run serve & wait",
+    "build-serve": "npm run build && npm run serve",
+    "all": "npm run build-serve & test & wait"
   },
   "author": "",
   "license": "ISC",

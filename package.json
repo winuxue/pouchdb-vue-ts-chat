@@ -8,7 +8,7 @@
     "pouchdb": "pouchdb-server --port 5984",
     "test": "npm run pouchdb & npm run serve & wait",
     "build-serve": "npm run build && npm run serve",
-    "all": "npm run build-serve & test & wait"
+    "all": "npm run build-serve & npm run pouchdb & wait"
   },
   "author": "",
   "license": "ISC",
